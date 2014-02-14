@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <title>OAuth 2.0 Callback</title>
+    <script>
+        function parseHash() {
+            const REGEX = /TBD/g;
+
+            var parameters = {};
+            var m;
+            while (m = REGEX.exec(window.location.hash)) {
+                var key = decodeURIComponent(m[1]);
+                parameters[key] = decodeURIComponent(m[2]);
+            }
+
+            return parameters;
+        }
+    </script>
+</head>
+
+</html>
