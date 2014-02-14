@@ -8,11 +8,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -28,12 +27,51 @@ import com.google.gson.JsonParser;
 
 public class OAuth2Util {
 
+    private static final String AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/auth";
+    private static final String TOKEN_ENDPOINT = "https://accounts.google.com/o/oauth2/token";
+    private static final String REDIRECT_URI = "http://localhost:8080/oauth2-authorization-code/callback.jsp";
+    private static final String SCOPE = "https://www.google.com/m8/feeds";
+    private static final String CLIENT_ID = "CLIENT_ID";
+    private static final String CLIENT_SECRET = "CLIENT_SECRET";
+
+    private static final String SESSION_OAUTH_2_STATE = "oauth2_state";
+
     public static String getLoginUrl(HttpServletRequest request) {
-        return "TBD";
+        String state = RandomStringUtils.randomAlphanumeric(32);
+        request.getSession().setAttribute(SESSION_OAUTH_2_STATE, state);
+
+        return AUTHORIZATION_ENDPOINT +
+                "?response_type=code" +
+                "&client_id=" + encode(CLIENT_ID) +
+                "&redirect_uri=" + encode(REDIRECT_URI) +
+                "&scope=" + encode(SCOPE) +
+                "&state=" + encode(state);
     }
 
     public static String retrieveAccessToken(HttpServletRequest request) {
-        return "TBD";
+        String state = request.getParameter("state");
+        String originalState = (String) request.getSession().getAttribute(SESSION_OAUTH_2_STATE);
+        if (!StringUtils.equals(state, originalState)) {
+            // handle invalid state
+            return null;
+        }
+
+        if (request.getParameter("error") != null) {
+            // handle error
+            return null;
+        }
+
+        String authorizationCode = request.getParameter("code");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("client_id", CLIENT_ID);
+        parameters.put("client_secret", CLIENT_SECRET);
+        parameters.put("redirect_uri", REDIRECT_URI);
+        parameters.put("grant_type", "authorization_code");
+        parameters.put("code", authorizationCode);
+        String response = sendHttpPost(TOKEN_ENDPOINT, parameters);
+
+        Map<String, String> responseMap = parseJson(response);
+        return responseMap.get("access_token");
     }
 
     private static String encode(String s) {
