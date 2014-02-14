@@ -1,5 +1,20 @@
+var SCOPE = "https://www.google.com/m8/feeds";
+var CLIENT_ID = "CLIENT_ID";
+var REDIRECT_URI = "http://localhost:8080/oauth2-implicit/callback.html";
+var AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/auth";
+
+var state;
+var accessToken;
+
 function getLoginUrl() {
-    return "TBD";
+    state = generateSecureRandomState();
+
+    return AUTHORIZATION_ENDPOINT +
+        "?response_type=token" +
+        "&client_id=" + encodeURIComponent(CLIENT_ID) +
+        "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
+        "&scope=" + encodeURIComponent(SCOPE) +
+        "&state=" + encodeURIComponent(state);
 }
 
 function openLoginPage() {
@@ -7,6 +22,16 @@ function openLoginPage() {
 }
 
 function setOAuthParameters(parameters) {
+    if (parameters.state != state) {
+        alert("Invalid state!");
+        return;
+    }
+    if (!!parameters.error) {
+        alert("OAuth 2 error: " + error);
+        return;
+    }
+
+    accessToken = parameters.access_token;
     loadContacts();
 }
 
@@ -26,7 +51,7 @@ function loadContacts() {
         type: 'GET',
         url: 'https://www.googleapis.com/m8/feeds/contacts/default/full',
         headers: {
-            Authorization: 'Bearer TBD'
+            Authorization: 'Bearer ' + accessToken
         },
         success: function (data) {
             displayContacts(data);

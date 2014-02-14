@@ -4,7 +4,7 @@
     <title>OAuth 2.0 Callback</title>
     <script>
         function parseHash() {
-            const REGEX = /TBD/g;
+            const REGEX = /([a-z_]+)=([^&]*)/g;
 
             var parameters = {};
             var m;
@@ -15,6 +15,10 @@
 
             return parameters;
         }
+
+        var parameters = parseHash();
+        window.opener.setOAuthParameters(parameters);
+        window.close();
     </script>
 </head>
 
